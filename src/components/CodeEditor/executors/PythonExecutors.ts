@@ -3,7 +3,7 @@ import type { CodeExecutor, ExecutionResult } from '../types';
 export class PythonExecutor implements CodeExecutor {
   async execute(code: string): Promise<ExecutionResult> {
     try {
-      const response = await fetch('/api/python', {
+      const response = await fetch('http://localhost:3000/api/python', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -11,23 +11,12 @@ export class PythonExecutor implements CodeExecutor {
         body: JSON.stringify({ code }),
       });
 
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        return {
-          type: 'error',
-          content: 'Invalid response from server. Expected JSON.'
-        };
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
       
-      if (!response.ok) {
-        return {
-          type: 'error',
-          content: result.error || `HTTP Error: ${response.status}`
-        };
-      }
-
       if (result.error) {
         return {
           type: 'error',

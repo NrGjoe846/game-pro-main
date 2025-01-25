@@ -3,36 +3,35 @@ import type { CodeExecutor, ExecutionResult } from '../types';
 export class JavaScriptExecutor implements CodeExecutor {
   async execute(code: string): Promise<ExecutionResult> {
     try {
-      // Create a new function with console.log capture
-      let output = '';
-      const originalLog = console.log;
-      console.log = (...args) => {
-        output += args.map(arg => 
-          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-        ).join(' ') + '\n';
-      };
+      const response = await fetch('http://localhost:3000/api/javascript', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
+      });
 
-      // Execute the code in a try-catch block
-      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-      const fn = new AsyncFunction(code);
-      const result = await fn();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      // Restore original console.log
-      console.log = originalLog;
-
-      // If there's a return value, add it to the output
-      if (result !== undefined) {
-        output += String(result);
+      const result = await response.json();
+      
+      if (result.error) {
+        return {
+          type: 'error',
+          content: result.error
+        };
       }
 
       return {
         type: 'success',
-        content: output.trim() || 'Code executed successfully with no output'
+        content: result.output || 'Code executed successfully with no output'
       };
     } catch (error) {
       return {
         type: 'error',
-        content: `${error.name}: ${error.message}`
+        content: `Execution Error: ${error.message}`
       };
     }
   }

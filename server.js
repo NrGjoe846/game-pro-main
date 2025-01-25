@@ -1,76 +1,76 @@
 import express from 'express';
 import cors from 'cors';
-import { exec } from 'child_process';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { PythonShell } from 'python-shell';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
+const port = 3000;
+
 app.use(cors());
 app.use(express.json());
 
-// Create temporary files for code execution
-const createTempFile = async (code, extension) => {
-  const fileName = `${uuidv4()}.${extension}`;
-  const filePath = join(process.cwd(), 'temp', fileName);
-  await writeFile(filePath, code);
-  return { fileName, filePath };
-};
-
-// Execute code based on language
-const executeCode = (language, code) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      switch (language) {
-        case 'javascript':
-          // Execute JavaScript using Node.js
-          exec(`node -e "${code.replace(/"/g, '\\"')}"`, (error, stdout, stderr) => {
-            if (error) reject(stderr);
-            else resolve(stdout);
-          });
-          break;
-
-        case 'python':
-          // Execute Python code
-          const { filePath: pyPath } = await createTempFile(code, 'py');
-          exec(`python3 ${pyPath}`, (error, stdout, stderr) => {
-            if (error) reject(stderr);
-            else resolve(stdout);
-          });
-          break;
-
-        case 'java':
-          // Execute Java code
-          const className = 'Main';
-          const { filePath: javaPath } = await createTempFile(code, 'java');
-          exec(`javac ${javaPath} && java -cp ${process.cwd()}/temp ${className}`, 
-            (error, stdout, stderr) => {
-              if (error) reject(stderr);
-              else resolve(stdout);
-          });
-          break;
-
-        default:
-          reject('Unsupported language');
-      }
-    } catch (error) {
-      reject(error.message);
-    }
-  });
-};
-
-app.post('/api/compiler', async (req, res) => {
-  const { language, code } = req.body;
-
+// JavaScript code execution
+app.post('/api/javascript', (req, res) => {
+  const { code } = req.body;
   try {
-    const output = await executeCode(language, code);
-    res.json({ output });
+    // Create a new function with console.log capture
+    let output = '';
+    const originalLog = console.log;
+    console.log = (...args) => {
+      output += args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+      ).join(' ') + '\n';
+    };
+
+    // Execute the code
+    const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+    const fn = new AsyncFunction(code);
+    const result = fn();
+
+    // Restore original console.log
+    console.log = originalLog;
+
+    res.json({ success: true, output: output || String(result) });
   } catch (error) {
-    res.status(400).json({ error: error.toString() });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Python code execution
+app.post('/api/python', (req, res) => {
+  const { code } = req.body;
+  
+  // Create a temporary Python script
+  const options = {
+    mode: 'text',
+    pythonPath: 'python3',
+    pythonOptions: ['-u'], // unbuffered output
+    scriptPath: __dirname,
+    args: []
+  };
+
+  PythonShell.runString(code, options).then(messages => {
+    res.json({ success: true, output: messages.join('\n') });
+  }).catch(err => {
+    res.status(400).json({ success: false, error: err.message });
+  });
+});
+
+// Java code execution
+app.post('/api/java', (req, res) => {
+  const { code } = req.body;
+  
+  // For now, return a mock response since Java execution requires more setup
+  res.json({ 
+    success: true, 
+    output: "Java execution is not implemented yet. This is a mock response." 
+  });
+});
+
+app.listen(port, () => {
+  console.log(`Code execution server running at http://localhost:${port}`);
 });

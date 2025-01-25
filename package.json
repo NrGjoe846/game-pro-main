@@ -11,20 +11,20 @@
     "server": "node server.js"
   },
   "dependencies": {
+    "lucide-react": "^0.344.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.22.3",
+    "framer-motion": "^11.0.8",
+    "react-spring": "^9.7.3",
+    "react-use-gesture": "^9.1.3",
+    "react-confetti": "^6.1.0",
     "@radix-ui/react-slider": "^1.1.2",
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-tooltip": "^1.0.7",
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
-    "framer-motion": "^11.0.8",
-    "lucide-react": "^0.344.0",
-    "react": "^18.3.1",
-    "react-confetti": "^6.1.0",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.22.3",
-    "react-spring": "^9.7.3",
-    "react-use-gesture": "^9.1.3",
-    "uuid": "^9.0.1"
+    "express": "^4.18.3",
+    "python-shell": "^5.0.0",
+    "cors": "^2.8.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
