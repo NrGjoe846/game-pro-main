@@ -3,6 +3,7 @@ import { Play, Save, RotateCcw, Code2, Terminal, Copy, Check, X } from 'lucide-r
 import LanguageSelector from './LanguageSelector';
 import EditorControls from './EditorControls';
 import OutputTerminal from './OutputTerminal';
+import { ExecutorFactory } from './ExecutorFactory';
 import { codeTemplates } from './codeTemplates';
 import type { Language, ExecutionResult } from './types';
 
@@ -13,6 +14,7 @@ const CodeEditor: React.FC = () => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Auto-save functionality
   useEffect(() => {
@@ -34,50 +36,46 @@ const CodeEditor: React.FC = () => {
     } else {
       setCode(codeTemplates[language]);
     }
+    setOutput([]);
+    setError(null);
   }, [language]);
 
   const executeCode = async () => {
     setIsExecuting(true);
     setOutput([]);
+    setError(null);
 
-    // Simulate code execution
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      let result: ExecutionResult;
-      if (language === 'javascript') {
-        try {
-          // Safely evaluate JavaScript code
-          const func = new Function(code);
-          const output = func();
-          result = { type: 'success', content: String(output) };
-        } catch (error) {
-          result = { type: 'error', content: error.message };
-        }
-      } else {
-        // Simulate other language execution
-        result = {
-          type: 'success',
-          content: `[${language.toUpperCase()} Output] Program executed successfully\n> Hello, World!`
-        };
-      }
-      
-      setOutput(prev => [...prev, result]);
+      const executor = ExecutorFactory.getExecutor(language);
+      const result = await executor.execute(code);
+      setOutput([result]);
     } catch (error) {
-      setOutput(prev => [...prev, { type: 'error', content: error.message }]);
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
+      setOutput([{
+        type: 'error',
+        content: `Execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      }]);
     } finally {
       setIsExecuting(false);
     }
   };
 
   const resetCode = () => {
-    setCode(codeTemplates[language]);
+    if (window.confirm('Are you sure you want to reset the code? This will clear your current changes.')) {
+      setCode(codeTemplates[language]);
+      setOutput([]);
+      setError(null);
+    }
   };
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(code);
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
+    try {
+      await navigator.clipboard.writeText(code);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy code:', error);
+    }
   };
 
   return (
@@ -116,6 +114,7 @@ const CodeEditor: React.FC = () => {
                 onChange={(e) => setCode(e.target.value)}
                 className="w-full h-full bg-transparent resize-none focus:outline-none text-sm font-mono text-gray-300"
                 spellCheck="false"
+                placeholder={`Write your ${language} code here...`}
               />
             </div>
           </div>
@@ -123,7 +122,11 @@ const CodeEditor: React.FC = () => {
 
         {/* Output Panel */}
         <div className="w-1/2">
-          <OutputTerminal output={output} isExecuting={isExecuting} />
+          <OutputTerminal 
+            output={output}
+            isExecuting={isExecuting}
+            error={error}
+          />
         </div>
       </div>
     </div>
