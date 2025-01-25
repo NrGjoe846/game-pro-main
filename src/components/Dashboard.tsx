@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import Navigation from './Navigation';
 import LearningPath from './LearningPath';
 import ProgressCard from './ProgressCard';
-import LeaderboardCard from './LeaderboardCard';
 import NextLessonCard from './NextLessonCard';
 import DailyChallenge from './DailyChallenge';
 import AchievementBadge from './gamification/AchievementBadge';
@@ -85,10 +84,9 @@ const Dashboard = () => {
           </div>
 
           {/* Stats Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
             <ProgressCard />
             <NextLessonCard />
-            <LeaderboardCard />
           </div>
         </div>
       </div>
