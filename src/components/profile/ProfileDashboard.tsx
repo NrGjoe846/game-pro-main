@@ -211,9 +211,9 @@ const ProfileDashboard = () => {
 
               {/* Avatar with Customization */}
               <div className="relative flex flex-col items-center">
-                <div className="relative">
+                <div className="relative w-40 h-40 flex items-center justify-center">
                   {/* Power Level Ring */}
-                  <svg className="absolute -inset-2 w-40 h-40" viewBox="0 0 100 100">
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
                     <circle
                       cx="50"
                       cy="50"
@@ -256,7 +256,7 @@ const ProfileDashboard = () => {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setShowAvatarCustomization(true)}
-                      className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                      className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-lg"
                     >
                       <Sparkles className="w-5 h-5" />
                     </motion.button>
