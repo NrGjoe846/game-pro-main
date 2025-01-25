@@ -3,7 +3,7 @@ import type { CodeExecutor, ExecutionResult } from '../types';
 export class PythonExecutor implements CodeExecutor {
   async execute(code: string): Promise<ExecutionResult> {
     try {
-      const response = await fetch('http://localhost:3000/api/python', {
+      const response = await fetch('/api/python', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,7 +31,7 @@ export class PythonExecutor implements CodeExecutor {
     } catch (error) {
       return {
         type: 'error',
-        content: `Execution Error: ${error.message}`
+        content: `Execution Error: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
     }
   }
